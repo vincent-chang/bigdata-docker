@@ -1,0 +1,1 @@
+docker build -t ubuntu-hadoop-resource-manager:hadoop-2.5.2 --network host .

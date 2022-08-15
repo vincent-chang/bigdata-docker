@@ -1,0 +1,121 @@
+version: '3'
+
+services:
+  name-node:
+    image: ubuntu-hadoop-namenode:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - namenode:/var/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=bigdata
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50070
+
+  data-node:
+    image: ubuntu-hadoop-datanode:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - datanode:/var/hadoop/dfs/data
+    env_file:
+      - hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50075
+    depends_on:
+      - name-node
+
+  resource-manager:
+    image: ubuntu-hadoop-resource-manager:hadoop-2.5.2
+    networks:
+      - bigdata
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8088
+    healthcheck:
+      disable: true
+    depends_on:
+      - name-node
+      - data-node
+
+  node-manager:
+    image: ubuntu-hadoop-node-manager:hadoop-2.5.2
+    networks:
+      - bigdata
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8042
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+
+  hadoop-history-server:
+    image: ubuntu-hadoop-history-server:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - hadoop-history-server:/var/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8188
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+
+volumes:
+  namenode:
+  datanode:
+  hadoop-history-server:
+
+networks:
+  bigdata:

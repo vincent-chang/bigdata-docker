@@ -1,0 +1,1 @@
+docker build -t ubuntu-hadoop-hive:1.2.1-mysql --network host .

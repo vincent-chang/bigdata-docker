@@ -1,0 +1,170 @@
+version: '3'
+
+services:
+  name-node:
+    image: ubuntu-hadoop-namenode:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - namenode:/var/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=bigdata
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50070
+
+  data-node:
+    image: ubuntu-hadoop-datanode:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - datanode:/var/hadoop/dfs/data
+    env_file:
+      - hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50075
+    depends_on:
+      - name-node
+
+  resource-manager:
+    image: ubuntu-hadoop-resource-manager:hadoop-2.5.2
+    networks:
+      - bigdata
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8088
+    healthcheck:
+      disable: true
+    depends_on:
+      - name-node
+      - data-node
+
+  node-manager:
+    image: ubuntu-hadoop-node-manager:hadoop-2.5.2
+    networks:
+      - bigdata
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8042
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+
+  hadoop-history-server:
+    image: ubuntu-hadoop-history-server:hadoop-2.5.2
+    networks:
+      - bigdata
+    volumes:
+      - hadoop-history-server:/var/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    env_file:
+      - hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8188
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+
+  hive-metastore-mysql:
+    image: hive-metastore-mysql
+    networks:
+      - bigdata
+    volumes:
+      - hive-metastore-mysql-data:/var/mysql
+    ports:
+      - 3306:3306
+
+  hive-metastore:
+    image: ubuntu-hadoop-hive:1.2.1-mysql
+    networks:
+      - bigdata
+    env_file:
+      - hadoop.env
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 hive-metastore-mysql:3306"
+    ports:
+      - "9083:9083"
+    depends_on:
+      - hive-metastore-mysql
+
+  hive-server:
+    image: ubuntu-hadoop-hive:1.2.1-mysql
+    networks:
+      - bigdata
+    env_file:
+      - hadoop.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://hive-metastore-mysql/hive"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - "10000:10000"
+    depends_on:
+      - hive-metastore-mysql
+      - hive-metastore
+
+  hive-termial:
+    image: ubuntu-hadoop-hive:1.2.1-mysql
+    networks:
+      - bigdata
+    env_file:
+      - hadoop.env
+    command: /usr/bin/bash
+    depends_on:
+      - hive-server
+
+volumes:
+  namenode:
+  datanode:
+  hadoop-history-server:
+  hive-metastore-mysql-data:
+
+networks:
+  bigdata:

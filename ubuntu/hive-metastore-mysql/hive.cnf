@@ -1,0 +1,8 @@
+[mysqld]
+
+sql_mode=NO_BACKSLASH_ESCAPES
+default_authentication_plugin = mysql_native_password
+character-set-server = utf8mb4
+collation-server = utf8mb4_general_ci
+init_connect='SET NAMES utf8mb4'
+lower_case_table_names = 1

@@ -1,0 +1,1 @@
+docker build -t hive-metastore-mysql:8.0.30 --network host .
