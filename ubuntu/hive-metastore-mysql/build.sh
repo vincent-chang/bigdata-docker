@@ -1,1 +1,1 @@
-docker build -t hive-metastore-mysql:8.0.30 --network host .
+docker build -t ubuntu-hive-metastore-mysql:5.7 --network host .

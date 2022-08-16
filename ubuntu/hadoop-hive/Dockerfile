@@ -25,8 +25,8 @@ RUN curl -fSL "${HIVE_URL}" -o /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     cp ${HIVE_HOME}/lib/datanucleus-*.jar ${HADOOP_YARN_LIB_DIR}/ && \
 	chmod +x /root/*.sh
 
-COPY mariadb-java-client-2.7.3.jar ${HIVE_HOME}/lib/
-COPY mariadb-java-client-2.7.3.jar ${HADOOP_YARN_LIB_DIR}/
+COPY mysql-connector-java-5.1.49.jar ${HIVE_HOME}/lib/
+COPY mysql-connector-java-5.1.49.jar ${HADOOP_YARN_LIB_DIR}/
 COPY conf/hive-site.xml ${HIVE_HOME}/conf
 COPY conf/beeline-log4j2.properties ${HIVE_HOME}/conf
 COPY conf/hive-env.sh ${HIVE_HOME}/conf

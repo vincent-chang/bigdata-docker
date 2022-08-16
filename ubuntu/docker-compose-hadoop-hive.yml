@@ -113,7 +113,7 @@ services:
       - resource-manager
 
   hive-metastore-mysql:
-    image: hive-metastore-mysql
+    image: ubuntu-hive-metastore-mysql:5.7
     networks:
       - bigdata
     volumes:
