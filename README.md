@@ -6,7 +6,7 @@
 
 > * 因为开发环境由 Windows 迁移到 M1 的 MacOS 后，原来使用的 VirtualBox 虚拟机不能用了，
 > * 工作上又需要一套 Spark 环境来做本地开发的基本测试。
-> * 本来想在 alpine linux 上弄的，不过由于有些 native 编译不过，所以转到 ubuntu 上了。
+> * 本来想在 alpine linux 上弄的，不过又因为有些 native 编译不过，所以转到 ubuntu 上了。
 
 ## 项目目标
 建立一套可以运行在 Apple Silicon M1 机器上的大数据 Docker 镜像。
