@@ -1,0 +1,1 @@
+docker buildx build -t ubuntu-hadoop-all:hadoop-2.5.2-hive-1.2.1-spark-1.6.1-mysql --network host --load .

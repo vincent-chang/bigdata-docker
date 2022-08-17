@@ -21,7 +21,6 @@ ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HADOOP_CONF_DIR=/etc/hadoop
 ENV PATH=${HADOOP_HOME}/bin:$PATH
 
-COPY settings.xml /root/.m2/
 COPY entry_point.sh /root/
 COPY start_namenode.sh /root/
 COPY start_datanode.sh /root/
