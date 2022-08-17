@@ -10,7 +10,7 @@
 
 ## 项目目标
 建立一套可以运行在 Apple Silicon M1 机器上的大数据 Docker 镜像。
-![image](https://github.com/vincent-chang/bigdata-docker/blob/main/.image/hadoop_checknative.jpg?raw=true)
+![image](https://github.com/vincent-chang/bigdata-docker/blob/hadoop-2.5.2-hive-1.2.1-spark-1.6.1/.image/hadoop_checknative.jpg?raw=true)
 
 ## 对原组件的改动
 
