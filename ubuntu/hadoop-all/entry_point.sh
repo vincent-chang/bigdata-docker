@@ -182,6 +182,7 @@ wait_for_it "localhost:50070"
 echo "[i] Starting Data Node..."
 nohup /root/start_datanode.sh >/root/start_datanode.log 2>&1 &
 wait_for_it "localhost:50075"
+sleep 10
 echo "[i] Starting Resource Manager..."
 nohup /root/start_resource_manager.sh >/root/start_resource_manager.log 2>&1 &
 wait_for_it "localhost:8088"
