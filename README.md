@@ -2,10 +2,18 @@
 
 此项目是以 https://github.com/big-data-europe 作为基础所做的 Ubuntu Linux Aarch64 平台定制开发。
 
+## 项目背景
+
+> * 因为开发环境由 Windows 迁移到 M1 的 MacOS 后，原来使用的 VirtualBox 虚拟机不能用了，
+> * 工作上又需要一套 Spark 环境来做本地开发的基本测试。
+> * 本来想在 alpine linux 上弄的，不过由于有些 native 编译不过，所以转到 ubuntu 上了。
+
 ## 项目目标
 建立一套可以运行在 Apple Silicon M1 机器上的大数据 Docker 镜像。
+![image](https://github.com/vincent-chang/bigdata-docker/blob/main/.image/hadoop_checknative.jpg?raw=true)
 
 ## 对原组件的改动
+
 * 在 ubuntu aarch64 环境下重新编译了下列组件
 > leveldbjni-all
 > * libleveldbjni.so: ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically linked, BuildID[sha1]=491f1538f25b84a626ea6ff71413f51c852a1b69, with debug_info, not stripped
@@ -25,10 +33,10 @@
 
 ## 模块说明
 
-### 单个 Docker（快速启动）
+### 单个 Docker（单机）
 * hadoop-all: 集成下面所有组件的 docker，一个 container 可启动全套服务（默认没有启动 spark-master 和 spark-worker 服务）。
   
-### Docker Compose（分布式）
+### Docker Compose（集群）
 * hadoop-base: 基础的 hadoop 环境。
 * name-node: name node 节点
 * data-node: data node 节点
