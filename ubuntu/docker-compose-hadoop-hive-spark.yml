@@ -6,7 +6,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - namenode:/var/hadoop/dfs/name
+      - hadoop-data:/var/hadoop
     environment:
       - CLUSTER_NAME=bigdata
     env_file:
@@ -28,7 +28,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - datanode:/var/hadoop/dfs/data
+      - hadoop-data:/var/hadoop
     env_file:
       - hadoop.env
     environment:
@@ -94,7 +94,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - hadoop-history-server:/var/hadoop/yarn/timeline
+      - hadoop-data:/var/hadoop
     environment:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
     env_file:
@@ -118,7 +118,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - hive-metastore-mysql-data:/var/lib/mysql
+      - mysql-data:/var/mysql
     ports:
       - 3306:3306
 
@@ -128,7 +128,7 @@ services:
       - bigdata
     env_file:
       - hadoop.env
-    command: /opt/hive/bin/hive --service metastore
+    command: /opt/hive/bin/hive --service metastore -v
     environment:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 hive-metastore-mysql:3306"
     ports:
@@ -154,7 +154,7 @@ services:
   spark-master:
     image: ubuntu-spark-master:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
     volumes:
-      - spark-logs:/var/spark/logs
+      - spark-data:/var/spark
     env_file:
       - hadoop.env
     environment:
@@ -175,7 +175,7 @@ services:
   spark-worker:
     image: ubuntu-spark-worker:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
     volumes:
-      - spark-logs:/var/spark/logs
+      - spark-data:/var/spark
     env_file:
       - hadoop.env
     environment:
@@ -191,7 +191,7 @@ services:
   spark-history-server:
     image: ubuntu-spark-history-server:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
     volumes:
-      - spark-logs:/var/spark/logs
+      - spark-data:/var/spark
     env_file:
       - hadoop.env
     environment:
@@ -205,11 +205,9 @@ services:
       - "18081:18081"
 
 volumes:
-  namenode:
-  datanode:
-  hadoop-history-server:
-  hive-metastore-mysql-data:
-  spark-logs:
+  mysql-data:
+  hadoop-data:
+  spark-data:
 
 networks:
   bigdata:

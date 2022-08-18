@@ -6,7 +6,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - namenode:/var/hadoop/dfs/name
+      - hadoop-data:/var/hadoop
     environment:
       - CLUSTER_NAME=bigdata
     env_file:
@@ -28,7 +28,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - datanode:/var/hadoop/dfs/data
+      - hadoop-data:/var/hadoop
     env_file:
       - hadoop.env
     environment:
@@ -76,6 +76,7 @@ services:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
     env_file:
       - hadoop.env
+      - hadoop.spark-shuffle.env
     deploy:
       mode: global
       restart_policy:
@@ -93,7 +94,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - hadoop-history-server:/var/hadoop/yarn/timeline
+      - hadoop-data:/var/hadoop
     environment:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
     env_file:
@@ -113,9 +114,7 @@ services:
       - resource-manager
 
 volumes:
-  namenode:
-  datanode:
-  hadoop-history-server:
+  hadoop-data:
 
 networks:
   bigdata:

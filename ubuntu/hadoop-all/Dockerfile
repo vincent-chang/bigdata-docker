@@ -9,9 +9,20 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries && \
     apt-get update && \
     apt-get install -y net-tools netcat curl perl mysql-server expect \
-        libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1
-
-RUN apt-get install -y openjdk-8-jdk
+        libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1 \
+        openjdk-8-jdk && \
+    apt-get clean && \
+    mkdir -p /var/mysql && \
+    mkdir -p /var/run/mysql && \
+    mkdir -p /var/lib/mysql && \
+    mkdir -p /var/log/mysql && \
+    mv /var/run/mysql /var/mysql/run && \
+    mv /var/lib/mysql /var/mysql/lib && \
+    mv /var/log/mysql /var/mysql/log && \
+    ln -s /var/mysql/run /var/run/mysql && \
+    ln -s /var/mysql/lib /var/lib/mysql && \
+    ln -s /var/mysql/log /var/log/mysql && \
+    chown -R mysql:mysql /var/mysql
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 
@@ -21,32 +32,15 @@ ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HADOOP_CONF_DIR=/etc/hadoop
 ENV PATH=${HADOOP_HOME}/bin:$PATH
 
-ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=hive
-ENV MYSQL_USER=hive
-ENV MYSQL_PASSWORD=hive
-
-COPY mysqld.cnf /etc/mysql/mysql.conf.d/
-COPY entry_point.sh /root/
-COPY start_namenode.sh /root/
-COPY start_datanode.sh /root/
-COPY start_resource_manager.sh /root/
-COPY start_node_manager.sh /root/
-COPY start_history_server.sh /root/
-COPY start_hive_metastore.sh /root/
-COPY start_hive_server.sh /root/
-COPY spark_master.sh /root/
-COPY spark_worker.sh /root
-COPY spark_history_server.sh /root/
-
 RUN curl -fSL "${HADOOP_URL}" -o /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
     tar -xvf /tmp/hadoop-${HADOOP_VERSION}.tar.gz -C /opt/ && \
     rm /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
     chown -R root:root /opt/hadoop-${HADOOP_VERSION} && \
     ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop && \
-    mkdir -p /opt/hadoop-$HADOOP_VERSION/logs && \
-    mkdir -p /hadoop-data && \
-    chmod a+x /root/*.sh
+    mkdir -p /var/hadoop/dfs/name && \
+    mkdir -p /var/hadoop/dfs/data && \
+    mkdir -p /var/hadoop/yarn/timeline && \
+    ln -s /var/hadoop/logs /opt/hadoop-$HADOOP_VERSION/logs
 
 ENV HIVE_VERSION=1.2.1
 ENV HIVE_URL=https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz
@@ -103,13 +97,15 @@ RUN curl -fSL "${SCALA_URL}" -o /tmp/scala.tgz && \
     cp ${SPARK_HOME}/lib/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ && \
     rm -f /opt/spark-${SPARK_VERSION}/lib/datanucleus-*.jar && \
     cp ${HIVE_HOME}/lib/datanucleus-*.jar /opt/spark-${SPARK_VERSION}/lib/ && \
-    mkdir -p /var/hadoop/dfs/name && \
-    mkdir -p /var/hadoop/dfs/data && \
-    mkdir -p /var/hadoop/yarn/timeline && \
     mkdir -p /var/spark/logs
 
 ENV CLUSTER_NAME=bigdata
 ENV MULTIHOMED_NETWORK=1
+
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=hive
+ENV MYSQL_USER=hive
+ENV MYSQL_PASSWORD=hive
 
 ENV CORE_CONF_fs_defaultFS=hdfs://localhost:9000
 ENV CORE_CONF_hadoop_http_staticuser_user=root
@@ -160,7 +156,7 @@ ENV MAPRED_CONF_yarn_app_mapreduce_am_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/
 ENV MAPRED_CONF_mapreduce_map_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/"
 ENV MAPRED_CONF_mapreduce_reduce_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/"
 
-ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionURL="jdbc:mysql://localhost/hive?allowPublicKeyRetrieval=true"
+ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionURL="jdbc:mysql://localhost/hive?useSSL=false"
 ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=com.mysql.jdbc.Driver
 ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName=hive
 ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword=hive
@@ -175,5 +171,22 @@ ENV SPARK_WORKER_WEBUI_PORT=8081
 ENV SPARK_WORKER_LOG=/var/spark/logs
 ENV SPARK_MASTER="spark://localhost:7077"
 
+COPY entry_point.sh /root/
+COPY mysqld.cnf /etc/mysql/mysql.conf.d/
+COPY start_namenode.sh /root/
+COPY start_datanode.sh /root/
+COPY start_resource_manager.sh /root/
+COPY start_node_manager.sh /root/
+COPY start_history_server.sh /root/
+COPY start_hive_metastore.sh /root/
+COPY start_hive_server.sh /root/
+COPY spark_master.sh /root/
+COPY spark_worker.sh /root
+COPY spark_history_server.sh /root/
+
+RUN chmod a+x /root/*.sh
+WORKDIR /opt/
+
+VOLUME ["/var/mysql", "/var/hadoop", "/var/spark"]
 ENTRYPOINT ["bash", "/root/entry_point.sh"]
 CMD ["/bin/bash"]

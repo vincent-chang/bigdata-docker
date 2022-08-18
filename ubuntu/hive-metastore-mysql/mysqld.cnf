@@ -65,28 +65,28 @@ query_cache_size        = 16M
 # Both location gets rotated by the cronjob.
 # Be aware that this log type is a performance killer.
 # As of 5.1 you can enable the log at runtime!
-#general_log_file        = /var/log/mysql/mysql.log
-#general_log             = 1
+general_log_file        = /var/log/mysql/mysql.log
+general_log             = 1
 #
 # Error log - should be very few entries.
 #
 log_error = /var/log/mysql/error.log
 #
 # Here you can see queries with especially long duration
-#slow_query_log         = 1
-#slow_query_log_file    = /var/log/mysql/mysql-slow.log
-#long_query_time = 2
-#log-queries-not-using-indexes
+slow_query_log         = 1
+slow_query_log_file    = /var/log/mysql/mysql-slow.log
+long_query_time = 2
+log-queries-not-using-indexes
 #
 # The following can be used as easy to replay backup logs or for replication.
 # note: if you are setting up a replication slave, see README.Debian about
 #       other settings you may need to change.
-#server-id              = 1
-#log_bin                        = /var/log/mysql/mysql-bin.log
+server-id              = 1
+log_bin                        = /var/log/mysql/mysql-bin.log
 expire_logs_days        = 10
 max_binlog_size   = 100M
-#binlog_do_db           = include_database_name
-#binlog_ignore_db       = include_database_name
+binlog_do_db           = include_database_name
+binlog_ignore_db       = include_database_name
 #
 # * InnoDB
 #
@@ -104,7 +104,7 @@ max_binlog_size   = 100M
 # ssl-cert=/etc/mysql/server-cert.pem
 # ssl-key=/etc/mysql/server-key.pem
 
-sql_mode=NO_BACKSLASH_ESCAPES
+# sql_mode=NO_BACKSLASH_ESCAPES
 # default_authentication_plugin = mysql_native_password
 character-set-server = utf8mb4
 collation-server = utf8mb4_general_ci

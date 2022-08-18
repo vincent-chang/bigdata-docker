@@ -45,4 +45,6 @@ ENV INIT_DAEMON_BASE_URI http://identifier/init-daemon
 ENV INIT_DAEMON_STEP spark_master_init
 ENV PYTHONHASHSEED 1
 
+VOLUME ["/var/spark"]
+
 CMD ["bash"]

@@ -6,7 +6,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - namenode:/var/hadoop/dfs/name
+      - hadoop-data:/var/hadoop
     environment:
       - CLUSTER_NAME=bigdata
     env_file:
@@ -28,7 +28,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - datanode:/var/hadoop/dfs/data
+      - hadoop-data:/var/hadoop
     env_file:
       - hadoop.env
     environment:
@@ -76,6 +76,7 @@ services:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
     env_file:
       - hadoop.env
+      - hadoop.spark-shuffle.env
     deploy:
       mode: global
       restart_policy:
@@ -93,7 +94,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - hadoop-history-server:/var/hadoop/yarn/timeline
+      - hadoop-data:/var/hadoop
     environment:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
     env_file:
@@ -117,7 +118,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - hive-metastore-mysql-data:/var/mysql
+      - mysql-data:/var/mysql
     ports:
       - 3306:3306
 
@@ -127,7 +128,7 @@ services:
       - bigdata
     env_file:
       - hadoop.env
-    command: /opt/hive/bin/hive --service metastore
+    command: /opt/hive/bin/hive --service metastore -v
     environment:
       SERVICE_PRECONDITION: "name-node:50070 data-node:50075 hive-metastore-mysql:3306"
     ports:
@@ -150,21 +151,9 @@ services:
       - hive-metastore-mysql
       - hive-metastore
 
-  hive-termial:
-    image: ubuntu-hadoop-hive:1.2.1-mysql
-    networks:
-      - bigdata
-    env_file:
-      - hadoop.env
-    command: /usr/bin/bash
-    depends_on:
-      - hive-server
-
 volumes:
-  namenode:
-  datanode:
-  hadoop-history-server:
-  hive-metastore-mysql-data:
+  mysql-data:
+  hadoop-data:
 
 networks:
   bigdata:

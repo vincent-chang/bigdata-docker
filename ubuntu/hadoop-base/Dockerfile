@@ -9,9 +9,9 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries && \
     apt-get update && \
     apt-get install -y net-tools netcat curl perl \
-        libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1
-
-RUN apt-get install -y openjdk-8-jdk
+        libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1 \
+        openjdk-8-jdk && \
+    apt-get clean
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 
@@ -33,11 +33,14 @@ RUN curl -fSL "${HADOOP_URL}" -o /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
     rm /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
     chown -R root:root /opt/hadoop-${HADOOP_VERSION} && \
     ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop && \
-    mkdir -p /opt/hadoop-$HADOOP_VERSION/logs && \
-    mkdir -p /hadoop-data && \
+	mkdir -p /var/hadoop/dfs/name && \
+    mkdir -p /var/hadoop/dfs/data && \
+    mkdir -p /var/hadoop/yarn/timeline && \
+    ln -s /var/hadoop/logs /opt/hadoop-$HADOOP_VERSION/logs && \
     chmod a+x /root/*.sh
 
 ENV MULTIHOMED_NETWORK=1
 
+VOLUME ["/var/hadoop"]
 ENTRYPOINT ["bash", "/root/entry_point.sh"]
 CMD ["/bin/bash"]

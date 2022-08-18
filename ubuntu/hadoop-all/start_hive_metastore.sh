@@ -1,3 +1,3 @@
 #!/bin/bash
 cd $HIVE_HOME/bin
-./hive --service metastore
+./hive --service metastore -v

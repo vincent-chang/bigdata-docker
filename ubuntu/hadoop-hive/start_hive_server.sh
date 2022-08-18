@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hadoop fs -mkdir       /tmp
+hadoop fs -mkdir -p    /tmp
 hadoop fs -mkdir -p    /user/hive/warehouse
 hadoop fs -chmod g+w   /tmp
 hadoop fs -chmod g+w   /user/hive/warehouse
