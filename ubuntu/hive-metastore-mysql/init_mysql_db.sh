@@ -66,4 +66,6 @@ expect eof
 
 fi
 
-exec $@
+if [ $$ -eq 1 ]; then
+  tail -f /var/log/mysql/error.log
+fi
