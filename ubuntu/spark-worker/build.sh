@@ -1,1 +1,1 @@
-docker build -t ubuntu-spark-worker:hadoop-2.5.2-hive-1.2.1-spark-1.6.1 --network host .
+docker build -t ubuntu-spark-worker:hadoop-3.0.0-hive-2.3.7-spark-3.0.0 --network host .

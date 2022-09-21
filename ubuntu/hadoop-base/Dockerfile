@@ -10,13 +10,14 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     apt-get update && \
     apt-get install -y net-tools netcat curl perl \
         libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1 \
-        openjdk-8-jdk && \
-    apt-get clean
+        libzstd1 openjdk-8-jdk && \
+    apt-get clean && \
+    ln -s /usr/lib/aarch64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 
-ENV HADOOP_VERSION=2.5.2
-ENV HADOOP_URL=https://github.com/vincent-chang/hadoop/releases/download/release-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
+ENV HADOOP_VERSION=3.0.0
+ENV HADOOP_URL=https://github.com/vincent-chang/hadoop/releases/download/rel%2Frelease-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
 ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HADOOP_CONF_DIR=/etc/hadoop
 ENV PATH=${HADOOP_HOME}/bin:$PATH
@@ -36,7 +37,7 @@ RUN curl -fSL "${HADOOP_URL}" -o /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
 	mkdir -p /var/hadoop/dfs/name && \
     mkdir -p /var/hadoop/dfs/data && \
     mkdir -p /var/hadoop/yarn/timeline && \
-    ln -s /var/hadoop/logs /opt/hadoop-$HADOOP_VERSION/logs && \
+    mkdir -p /opt/hadoop-$HADOOP_VERSION/logs && \
     chmod a+x /root/*.sh
 
 ENV MULTIHOMED_NETWORK=1

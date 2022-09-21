@@ -1,1 +1,1 @@
-docker build -t ubuntu-hadoop-base:hadoop-2.5.2 --network host .
+docker build -t ubuntu-hadoop-base:hadoop-3.0.0 --network host .

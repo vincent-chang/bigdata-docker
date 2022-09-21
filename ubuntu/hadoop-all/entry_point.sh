@@ -1,5 +1,4 @@
 #!/bin/bash
-
 function start_database_service()
 {
   service mysql status|grep "stopped"
@@ -13,7 +12,6 @@ function start_database_service()
     echo "[i] Hive data directory already present, skipping creation."
   else
     echo "[i] Hive data directory not found, creating initial DBs."
-
     if [ "$MYSQL_ROOT_PASSWORD" = "" ]; then
       MYSQL_ROOT_PASSWORD=root
       echo "[i] MySQL root Password: $MYSQL_ROOT_PASSWORD"
@@ -198,9 +196,9 @@ function wait_for_service_port()
 
 start_database_service
 echo "[i] Starting Name Node..."
-wait_for_service_port start_namenode "localhost:50070"
+wait_for_service_port start_namenode "localhost:9870"
 echo "[i] Starting Data Node..."
-wait_for_service_port start_datanode "localhost:50075"
+wait_for_service_port start_datanode "localhost:9864"
 echo "[i] Starting Resource Manager..."
 wait_for_service_port start_resource_manager "localhost:8031"
 echo "[i] Starting Node Manager..."

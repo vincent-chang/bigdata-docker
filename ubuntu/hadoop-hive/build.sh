@@ -1,1 +1,1 @@
-docker build -t ubuntu-hadoop-hive:1.2.1-mysql --network host .
+docker build -t ubuntu-hadoop-hive:2.3.7-mysql --network host .

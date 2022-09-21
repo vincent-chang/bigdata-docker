@@ -1,4 +1,4 @@
-FROM ubuntu-hadoop-base:hadoop-2.5.2
+FROM ubuntu-hadoop-base:hadoop-3.0.0
 
 LABEL maintainer="Vincent<vincent.zc.zhang@gmail.com>"
 

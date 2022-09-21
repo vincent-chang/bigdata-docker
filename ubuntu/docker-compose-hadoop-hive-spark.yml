@@ -2,11 +2,11 @@ version: '3'
 
 services:
   name-node:
-    image: ubuntu-hadoop-namenode:hadoop-2.5.2
+    image: ubuntu-hadoop-namenode:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     environment:
       - CLUSTER_NAME=bigdata
     env_file:
@@ -21,34 +21,34 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 50070
+        traefik.port: 9870
 
   data-node:
-    image: ubuntu-hadoop-datanode:hadoop-2.5.2
+    image: ubuntu-hadoop-datanode:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     env_file:
       - hadoop.env
     environment:
-      SERVICE_PRECONDITION: "name-node:50070"
+      SERVICE_PRECONDITION: "name-node:9870"
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 50075
+        traefik.port: 9864
     depends_on:
       - name-node
 
   resource-manager:
-    image: ubuntu-hadoop-resource-manager:hadoop-2.5.2
+    image: ubuntu-hadoop-resource-manager:hadoop-3.0.0
     networks:
       - bigdata
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864"
     env_file:
       - hadoop.env
     deploy:
@@ -61,7 +61,7 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8088
+        traefik.port: 8031
     healthcheck:
       disable: true
     depends_on:
@@ -69,11 +69,11 @@ services:
       - data-node
 
   node-manager:
-    image: ubuntu-hadoop-node-manager-spark-shuffle:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    image: ubuntu-hadoop-node-manager-spark-shuffle:hadoop-3.0.0-hive-2.3.7-spark-3.0.0
     networks:
       - bigdata
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 resource-manager:8031"
     env_file:
       - hadoop.env
       - hadoop.spark-shuffle.env
@@ -83,20 +83,20 @@ services:
         condition: on-failure
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8042
+        traefik.port: 8040
     depends_on:
       - name-node
       - data-node
       - resource-manager
 
   hadoop-history-server:
-    image: ubuntu-hadoop-history-server:hadoop-2.5.2
+    image: ubuntu-hadoop-history-server:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 resource-manager:8031"
     env_file:
       - hadoop.env
     deploy:
@@ -107,7 +107,7 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8188
+        traefik.port: 10200
     depends_on:
       - name-node
       - data-node
@@ -118,7 +118,7 @@ services:
     networks:
       - bigdata
     volumes:
-      - mysql-data:/var/mysql
+      - mysql-data-3.0.0:/var/mysql
     ports:
       - 3306:3306
 
@@ -128,9 +128,9 @@ services:
       - bigdata
     env_file:
       - hadoop.env
-    command: /opt/hive/bin/hive --service metastore -v
+    command: /root/start_hive_metastore.sh
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 hive-metastore-mysql:3306"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 hive-metastore-mysql:3306"
     ports:
       - "9083:9083"
     depends_on:
@@ -142,6 +142,7 @@ services:
       - bigdata
     env_file:
       - hadoop.env
+    command: /root/start_hive_server.sh
     environment:
       HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://hive-metastore-mysql/hive"
       SERVICE_PRECONDITION: "hive-metastore:9083"
@@ -152,13 +153,13 @@ services:
       - hive-metastore
 
   spark-master:
-    image: ubuntu-spark-master:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    image: ubuntu-spark-master:hadoop-3.0.0-hive-2.3.7-spark-3.0.0
     volumes:
-      - spark-data:/var/spark
+      - spark-data-3.0.0:/var/spark
     env_file:
       - hadoop.env
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 resource-manager:8031"
       INIT_DAEMON_STEP: "setup_spark"
     depends_on:
       - name-node
@@ -173,9 +174,9 @@ services:
       - "6066:6066"
 
   spark-worker:
-    image: ubuntu-spark-worker:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    image: ubuntu-spark-worker:hadoop-3.0.0-hive-2.3.7-spark-3.0.0
     volumes:
-      - spark-data:/var/spark
+      - spark-data-3.0.0:/var/spark
     env_file:
       - hadoop.env
     environment:
@@ -189,9 +190,9 @@ services:
       - "8081:8081"
 
   spark-history-server:
-    image: ubuntu-spark-history-server:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    image: ubuntu-spark-history-server:hadoop-3.0.0-hive-2.3.7-spark-3.0.0
     volumes:
-      - spark-data:/var/spark
+      - spark-data-3.0.0:/var/spark
     env_file:
       - hadoop.env
     environment:
@@ -205,9 +206,9 @@ services:
       - "18081:18081"
 
 volumes:
-  mysql-data:
-  hadoop-data:
-  spark-data:
+  mysql-data-3.0.0:
+  hadoop-data-3.0.0:
+  spark-data-3.0.0:
 
 networks:
   bigdata:

@@ -1,10 +1,10 @@
-FROM ubuntu-hadoop-hive:1.2.1-mysql
+FROM ubuntu-hadoop-hive:2.3.7-mysql
 
 LABEL maintainer="Vincent<vincent.zc.zhang@gmail.com>"
 
-ENV SCALA_VERSION=2.10.4
-ENV SPARK_VERSION=1.6.1
-ENV SPARK_HIVE_VERSION=1.2.1.spark
+ENV SCALA_VERSION=2.12.10
+ENV SPARK_VERSION=3.0.0
+ENV SPARK_HIVE_VERSION=2.3.7
 
 ENV HIVE_METASTORE_JDBC_DRIVER=${HIVE_HOME}/lib/mysql-connector-java-5.1.49.jar
 ENV SPARK_CLASSPATH=${HIVE_METASTORE_JDBC_DRIVER}
@@ -35,9 +35,8 @@ RUN set -x && \
     chown -R root:root /opt/spark-${SPARK_VERSION} && \
     cd /opt/spark-${SPARK_VERSION}/conf && \
     ln -s ${HIVE_HOME}/conf/hive-site.xml hive-site.xml && \
-    cp ${SPARK_HOME}/lib/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ && \
-    rm -f /opt/spark-${SPARK_VERSION}/lib/datanucleus-*.jar && \
-    cp ${HIVE_HOME}/lib/datanucleus-*.jar /opt/spark-${SPARK_VERSION}/lib/ && \
+    cp ${SPARK_HOME}/yarn/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ && \
+    mkdir -p /var/spark/logs && \
     chmod a+x /root/*.sh
 
 ENV ENABLE_INIT_DAEMON true

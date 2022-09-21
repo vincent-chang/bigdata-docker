@@ -2,11 +2,11 @@ version: '3'
 
 services:
   name-node:
-    image: ubuntu-hadoop-namenode:hadoop-2.5.2
+    image: ubuntu-hadoop-namenode:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     environment:
       - CLUSTER_NAME=bigdata
     env_file:
@@ -21,34 +21,34 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 50070
+        traefik.port: 9870
 
   data-node:
-    image: ubuntu-hadoop-datanode:hadoop-2.5.2
+    image: ubuntu-hadoop-datanode:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     env_file:
       - hadoop.env
     environment:
-      SERVICE_PRECONDITION: "name-node:50070"
+      SERVICE_PRECONDITION: "name-node:9870"
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 50075
+        traefik.port: 9864
     depends_on:
       - name-node
 
   resource-manager:
-    image: ubuntu-hadoop-resource-manager:hadoop-2.5.2
+    image: ubuntu-hadoop-resource-manager:hadoop-3.0.0
     networks:
       - bigdata
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864"
     env_file:
       - hadoop.env
     deploy:
@@ -61,7 +61,7 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8088
+        traefik.port: 8031
     healthcheck:
       disable: true
     depends_on:
@@ -69,34 +69,33 @@ services:
       - data-node
 
   node-manager:
-    image: ubuntu-hadoop-node-manager:hadoop-2.5.2
+    image: ubuntu-hadoop-node-manager:hadoop-3.0.0
     networks:
       - bigdata
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 resource-manager:8031"
     env_file:
       - hadoop.env
-      - hadoop.spark-shuffle.env
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8042
+        traefik.port: 8040
     depends_on:
       - name-node
       - data-node
       - resource-manager
 
   hadoop-history-server:
-    image: ubuntu-hadoop-history-server:hadoop-2.5.2
+    image: ubuntu-hadoop-history-server:hadoop-3.0.0
     networks:
       - bigdata
     volumes:
-      - hadoop-data:/var/hadoop
+      - hadoop-data-3.0.0:/var/hadoop
     environment:
-      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      SERVICE_PRECONDITION: "name-node:9870 data-node:9864 resource-manager:8031"
     env_file:
       - hadoop.env
     deploy:
@@ -107,14 +106,14 @@ services:
           - node.hostname == akswnc4.aksw.uni-leipzig.de
       labels:
         traefik.docker.network: bigdata
-        traefik.port: 8188
+        traefik.port: 10200
     depends_on:
       - name-node
       - data-node
       - resource-manager
 
 volumes:
-  hadoop-data:
+  hadoop-data-3.0.0:
 
 networks:
   bigdata:

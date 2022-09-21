@@ -10,8 +10,9 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     apt-get update && \
     apt-get install -y net-tools netcat curl perl mysql-server expect \
         libsysfs2 libssl1.0.0=1.0.2n-1ubuntu5.10 libtirpc1 zlib1g libbz2-1.0 liblz4-1 libsnappy1v5 libapr1 \
-        openjdk-8-jdk && \
+        libzstd1 openjdk-8-jdk && \
     apt-get clean && \
+    ln -s /usr/lib/aarch64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so && \
     mkdir -p /var/mysql && \
     mkdir -p /var/run/mysql && \
     mkdir -p /var/lib/mysql && \
@@ -26,8 +27,8 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
 
-ENV HADOOP_VERSION=2.5.2
-ENV HADOOP_URL=https://github.com/vincent-chang/hadoop/releases/download/release-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
+ENV HADOOP_VERSION=3.0.0
+ENV HADOOP_URL=https://github.com/vincent-chang/hadoop/releases/download/rel%2Frelease-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
 ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HADOOP_CONF_DIR=/etc/hadoop
 ENV PATH=${HADOOP_HOME}/bin:$PATH
@@ -40,9 +41,10 @@ RUN curl -fSL "${HADOOP_URL}" -o /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
     mkdir -p /var/hadoop/dfs/name && \
     mkdir -p /var/hadoop/dfs/data && \
     mkdir -p /var/hadoop/yarn/timeline && \
-    ln -s /var/hadoop/logs /opt/hadoop-$HADOOP_VERSION/logs
+    mkdir -p /opt/hadoop-$HADOOP_VERSION/logs
+    # ln -s /var/hadoop/logs /opt/hadoop-$HADOOP_VERSION/logs
 
-ENV HIVE_VERSION=1.2.1
+ENV HIVE_VERSION=2.3.7
 ENV HIVE_URL=https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz
 
 ENV HIVE_HOME=/opt/hive
@@ -53,11 +55,11 @@ ENV HADOOP_YARN_LIB_DIR=${HADOOP_HOME}/share/hadoop/yarn/lib
 RUN curl -fSL "${HIVE_URL}" -o /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     tar -xvf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C /opt/ && \
     rm /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
-	mv /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
-	rm /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/jline-*.jar && \
-	cp /opt/hive/lib/jline-*.jar /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/ && \
-	rm -f ${HADOOP_YARN_LIB_DIR}/datanucleus-*.jar && \
-    cp ${HIVE_HOME}/lib/datanucleus-*.jar ${HADOOP_YARN_LIB_DIR}/
+	mv /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive
+#	rm /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/jline-*.jar && \
+#	cp /opt/hive/lib/jline-*.jar /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/ && \
+#	rm -f ${HADOOP_YARN_LIB_DIR}/datanucleus-*.jar && \
+#   cp ${HIVE_HOME}/lib/datanucleus-*.jar ${HADOOP_YARN_LIB_DIR}/
 
 COPY mysql-connector-java-5.1.49.jar ${HIVE_HOME}/lib/
 COPY mysql-connector-java-5.1.49.jar ${HADOOP_YARN_LIB_DIR}/
@@ -69,9 +71,9 @@ COPY conf/hive-log4j2.properties ${HIVE_HOME}/conf
 COPY conf/ivysettings.xml ${HIVE_HOME}/conf
 COPY conf/llap-daemon-log4j2.properties ${HIVE_HOME}/conf
 
-ENV SCALA_VERSION=2.10.4
-ENV SPARK_VERSION=1.6.1
-ENV SPARK_HIVE_VERSION=1.2.1.spark
+ENV SCALA_VERSION=2.12.10
+ENV SPARK_VERSION=3.0.0
+ENV SPARK_HIVE_VERSION=${HIVE_VERSION}
 
 ENV HIVE_METASTORE_JDBC_DRIVER=${HIVE_HOME}/lib/mysql-connector-java-5.1.49.jar
 ENV SPARK_CLASSPATH=${HIVE_METASTORE_JDBC_DRIVER}
@@ -94,10 +96,11 @@ RUN curl -fSL "${SCALA_URL}" -o /tmp/scala.tgz && \
     chown -R root:root /opt/spark-${SPARK_VERSION} && \
     cd /opt/spark-${SPARK_VERSION}/conf && \
     ln -s ${HIVE_HOME}/conf/hive-site.xml hive-site.xml && \
-    cp ${SPARK_HOME}/lib/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ && \
-    rm -f /opt/spark-${SPARK_VERSION}/lib/datanucleus-*.jar && \
-    cp ${HIVE_HOME}/lib/datanucleus-*.jar /opt/spark-${SPARK_VERSION}/lib/ && \
+    cp ${SPARK_HOME}/yarn/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ && \
     mkdir -p /var/spark/logs
+#    rm -f /opt/spark-${SPARK_VERSION}/lib/datanucleus-*.jar && \
+#    cp ${HIVE_HOME}/lib/datanucleus-*.jar /opt/spark-${SPARK_VERSION}/lib/ && \
+
 
 ENV CLUSTER_NAME=bigdata
 ENV MULTIHOMED_NETWORK=1
@@ -152,9 +155,9 @@ ENV MAPRED_CONF_mapreduce_map_memory_mb=4096
 ENV MAPRED_CONF_mapreduce_reduce_memory_mb=8192
 ENV MAPRED_CONF_mapreduce_map_java_opts=-Xmx3072m
 ENV MAPRED_CONF_mapreduce_reduce_java_opts=-Xmx6144m
-ENV MAPRED_CONF_yarn_app_mapreduce_am_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/"
-ENV MAPRED_CONF_mapreduce_map_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/"
-ENV MAPRED_CONF_mapreduce_reduce_env="HADOOP_MAPRED_HOME=/opt/hadoop-2.5.2/"
+ENV MAPRED_CONF_yarn_app_mapreduce_am_env="HADOOP_MAPRED_HOME=/opt/hadoop-${HADOOP_VERSION}/"
+ENV MAPRED_CONF_mapreduce_map_env="HADOOP_MAPRED_HOME=/opt/hadoop-${HADOOP_VERSION}/"
+ENV MAPRED_CONF_mapreduce_reduce_env="HADOOP_MAPRED_HOME=/opt/hadoop-${HADOOP_VERSION}/"
 
 ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionURL="jdbc:mysql://localhost/hive?useSSL=false"
 ENV HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=com.mysql.jdbc.Driver
@@ -187,6 +190,6 @@ COPY spark_history_server.sh /root/
 RUN chmod a+x /root/*.sh
 WORKDIR /opt/
 
-VOLUME ["/var/mysql", "/var/hadoop", "/var/spark"]
+VOLUME ["/opt", "/var/mysql", "/var/hadoop", "/var/spark"]
 ENTRYPOINT ["bash", "/root/entry_point.sh"]
 CMD ["/bin/bash"]
