@@ -187,6 +187,6 @@ COPY spark_history_server.sh /root/
 RUN chmod a+x /root/*.sh
 WORKDIR /opt/
 
-VOLUME ["/var/mysql", "/var/hadoop", "/var/spark"]
+VOLUME ["/opt", "/var/mysql", "/var/hadoop", "/var/spark"]
 ENTRYPOINT ["bash", "/root/entry_point.sh"]
 CMD ["/bin/bash"]
